@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+databases[postgresql]
+python-dotenv
+asyncpg
+psycopg2-binary
+geoalchemy2
+shapely
+geopandas
+pyproj

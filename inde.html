@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mapa Geoespacial</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 600px; width: 100%; }
+    .form-container {
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h2>Mapa de Puntos Geoespaciales</h2>
+  <div class="form-container">
+    <label>Nombre del punto: </label>
+    <input type="text" id="nombre" placeholder="Plaza Vea San Isidro">
+  </div>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Inicializar mapa centrado en Lima
+    const map = L.map('map').setView([-12.0464, -77.0428], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Función para enviar el punto al backend
+    async function guardarPunto(nombre, lat, lon) {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/puntos/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre, lat, lon })
+        });
+
+        if (!response.ok) {
+          const error = await response.text();
+          throw new Error(error);
+        }
+
+        const data = await response.json();
+        console.log("Punto guardado:", data);
+        alert(`Punto guardado: ${data.nombre}`);
+      } catch (err) {
+        console.error(err);
+        alert("Error al guardar el punto. Revisa la consola.");
+      }
+    }
+
+    // Evento click en el mapa para crear un punto
+    map.on('click', function(e) {
+      const nombre = document.getElementById('nombre').value || "Punto sin nombre";
+      const lat = e.latlng.lat;
+      const lon = e.latlng.lng;
+
+      // Agregar marcador en el mapa
+      L.marker([lat, lon]).addTo(map)
+        .bindPopup(nombre)
+        .openPopup();
+
+      // Guardar en backend
+      guardarPunto(nombre, lat, lon);
+    });
+
+  </script>
+</body>
+</html>
