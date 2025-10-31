@@ -1,3 +1,5 @@
+import os
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from app.core.config import database
 from app.adapters.api import punto_api 
@@ -5,10 +7,36 @@ from app.adapters.api import linea_api
 from app.adapters.api import zona_api 
 from app.adapters.api import feature_api
 from app.adapters.api import global_style_api 
-from fastapi.middleware.cors import CORSMiddleware
 
 
-app = FastAPI(title="Backend Geoespacial")
+
+
+app = FastAPI(
+    title="Geoespacial API",
+    description="API para gestión de features geoespaciales",
+    version="1.0.0"
+)
+
+# Configuración de CORS
+origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3033").split(",")
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/")
+def read_root():
+    return {"message": "Geoespacial API is running", "status": "ok"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
 
 app.include_router(punto_api.router)
 app.include_router(linea_api.router)
@@ -25,22 +53,3 @@ async def startup():
 async def shutdown():
     await database.disconnect()
     print("Desconectado de la BD")
-
-
-
-# Configuración de CORS
-origins = [
-    "http://localhost",
-    "http://localhost:5173",  # si usas un frontend con Vite/React/Angular
-    "http://localhost:3071",
-    "http://127.0.0.1:5500",
-    "file://",                # para abrir index.html directamente
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,     # Orígenes permitidos
-    allow_credentials=True,
-    allow_methods=["*"],       # Permitir todos los métodos: GET, POST, etc.
-    allow_headers=["*"],       # Permitir todos los headers
-)
